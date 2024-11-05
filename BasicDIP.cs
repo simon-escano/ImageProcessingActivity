@@ -102,7 +102,28 @@
         public static Bitmap Subtraction(Bitmap original, Bitmap background)
         {
             Bitmap result = new Bitmap(original.Width, original.Height);
-            // TODO : Implement subtraction
+
+            Color greenColor = Color.FromArgb(0, 255, 0);
+            int greenGreyValue = (greenColor.R + greenColor.G + greenColor.B) / 3;
+            int threshold = 5;
+            for (int x = 0; x < original.Width; x++)
+            {
+                for (int y = 0; y < original.Height; y++)
+                {
+                    Color originalPixel = original.GetPixel(x, y);
+                    Color backgroundPixel = background.GetPixel(x, y);
+                    int originalGreyValue = (originalPixel.R + originalPixel.G + originalPixel.B) / 3;
+                    if (Math.Abs(originalGreyValue - greenGreyValue) > threshold)
+                    {
+                        result.SetPixel(x, y, originalPixel);
+                    }
+                    else
+                    {
+                        result.SetPixel(x, y, backgroundPixel);
+                    }
+                }
+            }
+
             return result;
         }
     }
