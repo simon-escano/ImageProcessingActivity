@@ -1,10 +1,19 @@
 ﻿namespace ImageProcessingActivity
 {
-    public static class Features
+    public static class BasicDIP
     {
         public static Bitmap BasicCopy(Bitmap original)
         {
-            return new Bitmap(original);
+            Bitmap copy = new Bitmap(original.Width, original.Height);
+            for (int x = 0; x < original.Width; x++)
+            {
+                for (int y = 0; y < original.Height; y++)
+                {
+                    Color pixel = original.GetPixel(x, y);
+                    copy.SetPixel(x, y, pixel);
+                }
+            }
+            return copy;
         }
 
         public static Bitmap ColorInversion(Bitmap original)
@@ -38,42 +47,35 @@
             return result;
         }
 
-        public static Bitmap Histogram(Bitmap original)
+        public static Bitmap Histogram(Bitmap original, PictureBox processed)
         {
-            Bitmap result = new Bitmap(original.Width, original.Height);
-            int[] red = new int[256];
-            int[] green = new int[256];
-            int[] blue = new int[256];
-            for (int x = 0; x < original.Width; x++)
+            Bitmap greyscaleImage = Greyscale(original);
+
+            int[] histData = new int[256];
+            for (int x = 0; x < greyscaleImage.Width; x++)
             {
-                for (int y = 0; y < original.Height; y++)
+                for (int y = 0; y < greyscaleImage.Height; y++)
                 {
-                    Color pixel = original.GetPixel(x, y);
-                    red[pixel.R]++;
-                    green[pixel.G]++;
-                    blue[pixel.B]++;
+                    Color pixel = greyscaleImage.GetPixel(x, y);
+                    histData[pixel.R]++;
                 }
             }
-            int max = Math.Max(red.Max(), Math.Max(green.Max(), blue.Max()));
-            for (int i = 0; i < 256; i++)
+
+            int histWidth = processed.Width;
+            int histHeight = processed.Height;
+            Bitmap histImage = new Bitmap(histWidth, histHeight);
+            using (Graphics g = Graphics.FromImage(histImage))
             {
-                red[i] = red[i] * 100 / max;
-                green[i] = green[i] * 100 / max;
-                blue[i] = blue[i] * 100 / max;
-            }
-            for (int x = 0; x < original.Width; x++)
-            {
-                for (int y = 0; y < original.Height; y++)
+                g.Clear(Color.White);
+                int max = histData.Max();
+                for (int i = 0; i < histData.Length; i++)
                 {
-                    Color pixel = original.GetPixel(x, y);
-                    int r = red[pixel.R];
-                    int g = green[pixel.G];
-                    int b = blue[pixel.B];
-                    Color histogram = Color.FromArgb(r, g, b);
-                    result.SetPixel(x, y, histogram);
+                    int barHeight = (int)((histData[i] / (float)max) * histHeight);
+                    g.DrawLine(Pens.Black, i, histHeight, i, histHeight - barHeight);
                 }
             }
-            return result;
+
+            return histImage;
         }
 
         public static Bitmap Sepia(Bitmap original)
@@ -94,6 +96,13 @@
                     result.SetPixel(x, y, sepia);
                 }
             }
+            return result;
+        }
+
+        public static Bitmap Subtraction(Bitmap original, Bitmap background)
+        {
+            Bitmap result = new Bitmap(original.Width, original.Height);
+            // TODO : Implement subtraction
             return result;
         }
     }
