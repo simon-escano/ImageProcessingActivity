@@ -106,8 +106,45 @@ namespace ImageProcessingActivity
                 case "Subtraction":
                     ProcessSubtraction();
                     break;
+                case "Gaussian Blur":
+                    processed.Image = Convolution.GaussianBlur(new Bitmap(chosenImage.Image));
+                    break;
+                case "Sharpen":
+                    processed.Image = Convolution.Sharpen(new Bitmap(chosenImage.Image));
+                    break;
+                case "Mean Removal":
+                    processed.Image = Convolution.MeanRemoval(new Bitmap(chosenImage.Image));
+                    break;
+                case "Emboss":
+                    processed.Image = Convolution.Emboss(new Bitmap(chosenImage.Image));
+                    break;
+                case "Emboss Laplascian":
+                    processed.Image = Convolution.EmbossLaplascian(new Bitmap(chosenImage.Image));
+                    break;
+                case "Horz/Vertical":
+                    processed.Image = Convolution.HorzVertical(new Bitmap(chosenImage.Image));
+                    break;
+                case "All Directions":
+                    processed.Image = Convolution.AllDirections(new Bitmap(chosenImage.Image));
+                    break;
+                case "Lossy":
+                    processed.Image = Convolution.Lossy(new Bitmap(chosenImage.Image));
+                    break;
+                case "Horizontal Only":
+                    processed.Image = Convolution.HorizontalOnly(new Bitmap(chosenImage.Image));
+                    break;
+                case "Vertical Only":
+                    processed.Image = Convolution.VerticalOnly(new Bitmap(chosenImage.Image));
+                    break;
+                case "Edge Enhance":
+                    processed.Image = Convolution.EdgeEnhance(new Bitmap(chosenImage.Image));
+                    break;
+                case "Edge Detection":
+                    processed.Image = Convolution.EdgeDetection(new Bitmap(chosenImage.Image));
+                    break;
             }
         }
+
 
         private void ProcessSubtraction()
         {

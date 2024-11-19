@@ -113,7 +113,7 @@
             feature.Dock = DockStyle.Left;
             feature.DropDownStyle = ComboBoxStyle.DropDownList;
             feature.FormattingEnabled = true;
-            feature.Items.AddRange(new object[] { "Basic Copy", "Color Inversion", "Greyscale", "Histogram", "Sepia", "Subtraction" });
+            feature.Items.AddRange(new object[] { "Basic Copy", "Color Inversion", "Greyscale", "Histogram", "Sepia", "Subtraction", "Gaussian Blur", "Sharpen", "Mean Removal", "Emboss", "Emboss Laplascian", "Horz/Vertical", "All Directions", "Lossy", "Horizontal Only", "Vertical Only", "Edge Detection", "Edge Enhance" });
             feature.Location = new Point(0, 0);
             feature.Margin = new Padding(0);
             feature.Name = "feature";

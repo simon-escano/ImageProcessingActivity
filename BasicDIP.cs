@@ -122,7 +122,6 @@ namespace ImageProcessingActivity
             System.Runtime.InteropServices.Marshal.Copy(originalPtr, originalBytes, 0, originalBytes.Length);
             System.Runtime.InteropServices.Marshal.Copy(backgroundPtr, backgroundBytes, 0, backgroundBytes.Length);
 
-            // Define the color to subtract (e.g., #1d1b1d)
             int subtractGreyValue = (color.R + color.G + color.B) / 3;
             int threshold = 5;
 
