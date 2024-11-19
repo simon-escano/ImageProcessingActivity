@@ -1,3 +1,6 @@
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 using AForge.Video;
 using AForge.Video.DirectShow;
 
@@ -5,9 +8,12 @@ namespace ImageProcessingActivity
 {
     public partial class Form1 : Form
     {
-        FilterInfoCollection filterInfoCollection;
-        VideoCaptureDevice videoCaptureDevice;
-        Boolean cameraRunning = false;
+        private FilterInfoCollection filterInfoCollection;
+        private VideoCaptureDevice videoCaptureDevice;
+        private bool cameraRunning = false;
+        private Color chosenColor;
+        private Bitmap backgroundBitmap;
+        private NewFrameEventHandler activeFrameHandler;
 
         public Form1()
         {
@@ -21,33 +27,39 @@ namespace ImageProcessingActivity
             filterInfoCollection = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             foreach (FilterInfo filterInfo in filterInfoCollection)
                 cameras.Items.Add(filterInfo.Name);
-            cameras.SelectedIndex = 0;
+
+            if (cameras.Items.Count > 0)
+                cameras.SelectedIndex = 0;
+
             videoCaptureDevice = new VideoCaptureDevice();
-        }
-
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
         }
 
         private void chooseImage_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;";
-            if (dialog.ShowDialog() == DialogResult.OK)
+            using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                stopCamera();
-                chosenImage.Image = Image.FromFile(dialog.FileName);
+                dialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;";
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    stopCamera();
+                    Image image = Image.FromFile(dialog.FileName);
+                    chosenImage.Image = image;
+                    chosenImageText.Text = $"Size: {image.Width}x{image.Height}";
+                }
             }
         }
 
         private void chooseBackground_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;";
-            if (dialog.ShowDialog() == DialogResult.OK)
+            using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                chosenBackground.Image = Image.FromFile(dialog.FileName);
+                dialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;";
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    Image image = Image.FromFile(dialog.FileName);
+                    chosenBackground.Image = image;
+                    chosenBackgroundText.Text = $"Size: {image.Width}x{image.Height}";
+                }
             }
         }
 
@@ -73,6 +85,7 @@ namespace ImageProcessingActivity
                 MessageBox.Show("Please upload an image first.");
                 return;
             }
+
             switch (feature.SelectedItem?.ToString())
             {
                 case "Basic Copy":
@@ -91,24 +104,43 @@ namespace ImageProcessingActivity
                     processed.Image = BasicDIP.Sepia(new Bitmap(chosenImage.Image));
                     break;
                 case "Subtraction":
-                    if (chosenBackground.Image == null)
-                    {
-                        MessageBox.Show("Please upload a background image first.");
-                        return;
-                    }
-
-                    Bitmap chosenBitmap = new Bitmap(chosenImage.Image);
-                    Bitmap backgroundBitmap = new Bitmap(chosenBackground.Image);
-
-                    if (chosenBitmap.Size !=  backgroundBitmap.Size) {
-                        MessageBox.Show("Images must be the same size.");
-                        return;
-                    }
-
-                    processed.Image = BasicDIP.Subtraction(chosenBitmap, backgroundBitmap);
-
-
+                    ProcessSubtraction();
                     break;
+            }
+        }
+
+        private void ProcessSubtraction()
+        {
+            if (chosenBackground.Image == null)
+            {
+                MessageBox.Show("Please upload a background image first.");
+                return;
+            }
+
+            backgroundBitmap = new Bitmap(chosenBackground.Image);
+            Bitmap chosenBitmap = new Bitmap(chosenImage.Image);
+
+            if (chosenBitmap.Size != backgroundBitmap.Size)
+            {
+                MessageBox.Show("Images must be the same size.");
+                return;
+            }
+
+            using (ColorDialog colorDialog = new ColorDialog())
+            {
+                if (colorDialog.ShowDialog() == DialogResult.OK)
+                {
+                    chosenColor = colorDialog.Color;
+
+                    if (cameraRunning)
+                    {
+                        StartSubtractionCamera();
+                    }
+                    else
+                    {
+                        processed.Image = BasicDIP.Subtraction(chosenColor, chosenBitmap, backgroundBitmap);
+                    }
+                }
             }
         }
 
@@ -116,19 +148,19 @@ namespace ImageProcessingActivity
         {
             if (cameraRunning)
             {
+                stopCamera();
                 toggleCamera.Text = "Turn On";
                 chooseImage.Enabled = true;
                 cameras.Enabled = true;
                 cameraRunning = false;
-                stopCamera();
-            } 
+            }
             else
             {
+                StartCamera();
                 toggleCamera.Text = "Turn Off";
                 chooseImage.Enabled = false;
                 cameras.Enabled = false;
                 cameraRunning = true;
-                startCamera();
             }
         }
 
@@ -139,11 +171,14 @@ namespace ImageProcessingActivity
                 MessageBox.Show("Please process an image first.");
                 return;
             }
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;";
-            if (dialog.ShowDialog() == DialogResult.OK)
+
+            using (SaveFileDialog dialog = new SaveFileDialog())
             {
-                processed.Image.Save(dialog.FileName);
+                dialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;";
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    processed.Image.Save(dialog.FileName);
+                }
             }
         }
 
@@ -152,23 +187,83 @@ namespace ImageProcessingActivity
             stopCamera();
         }
 
-        private void startCamera()
+        private void StartCamera()
         {
-            videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cameras.SelectedIndex].MonikerString);
-            videoCaptureDevice.NewFrame += (s, e) =>
+            if (videoCaptureDevice != null)
             {
-                chosenImage.Image = (Bitmap)e.Frame.Clone();
-            };
-            videoCaptureDevice.Start();
+                if (activeFrameHandler != null)
+                    videoCaptureDevice.NewFrame -= activeFrameHandler;
+
+                videoCaptureDevice = new VideoCaptureDevice(filterInfoCollection[cameras.SelectedIndex].MonikerString);
+
+                activeFrameHandler = DefaultFrameHandler;
+                videoCaptureDevice.NewFrame += activeFrameHandler;
+                videoCaptureDevice.Start();
+            }
+        }
+
+        private void StartSubtractionCamera()
+        {
+            if (videoCaptureDevice != null)
+            {
+                if (activeFrameHandler != null)
+                    videoCaptureDevice.NewFrame -= activeFrameHandler;
+
+                activeFrameHandler = SubtractionFrameHandler;
+                videoCaptureDevice.NewFrame += activeFrameHandler;
+            }
+        }
+
+        private void DefaultFrameHandler(object s, NewFrameEventArgs e)
+        {
+            try
+            {
+                Bitmap frame = (Bitmap)e.Frame.Clone();
+                chosenImage.Invoke((MethodInvoker)(() =>
+                {
+                    chosenImage.Image = frame;
+                    chosenImageText.Text = $"Size: {frame.Width}x{frame.Height}";
+                }));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in DefaultFrameHandler: {ex.Message}");
+            }
+        }
+
+        private void SubtractionFrameHandler(object s, NewFrameEventArgs e)
+        {
+            try
+            {
+                Bitmap frame = (Bitmap)e.Frame.Clone();
+                Bitmap processedFrame = BasicDIP.Subtraction(chosenColor, frame, backgroundBitmap);
+                processed.Invoke((MethodInvoker)(() =>
+                {
+                    processed.Image = processedFrame;
+                }));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in SubtractionFrameHandler: {ex.Message}");
+            }
         }
 
         private void stopCamera()
         {
-            if (videoCaptureDevice.IsRunning)
+            if (videoCaptureDevice != null && videoCaptureDevice.IsRunning)
             {
+                if (activeFrameHandler != null)
+                {
+                    videoCaptureDevice.NewFrame -= activeFrameHandler;
+                    activeFrameHandler = null;
+                }
+
                 videoCaptureDevice.SignalToStop();
                 videoCaptureDevice.WaitForStop();
+                videoCaptureDevice.Stop();
+
                 chosenImage.Image = null;
+                processed.Image = null;
             }
         }
     }

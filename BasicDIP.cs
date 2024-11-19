@@ -1,4 +1,6 @@
-﻿namespace ImageProcessingActivity
+﻿using System.Drawing.Imaging;
+
+namespace ImageProcessingActivity
 {
     public static class BasicDIP
     {
@@ -99,30 +101,58 @@
             return result;
         }
 
-        public static Bitmap Subtraction(Bitmap original, Bitmap background)
+        public static Bitmap Subtraction(Color color, Bitmap original, Bitmap background)
         {
             Bitmap result = new Bitmap(original.Width, original.Height);
 
-            Color greenColor = Color.FromArgb(0, 255, 0);
-            int greenGreyValue = (greenColor.R + greenColor.G + greenColor.B) / 3;
+            Rectangle rect = new Rectangle(0, 0, original.Width, original.Height);
+            BitmapData originalData = original.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            BitmapData backgroundData = background.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            BitmapData resultData = result.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+
+            int stride = originalData.Stride;
+            IntPtr originalPtr = originalData.Scan0;
+            IntPtr backgroundPtr = backgroundData.Scan0;
+            IntPtr resultPtr = resultData.Scan0;
+
+            byte[] originalBytes = new byte[stride * original.Height];
+            byte[] backgroundBytes = new byte[stride * background.Height];
+            byte[] resultBytes = new byte[stride * result.Height];
+
+            System.Runtime.InteropServices.Marshal.Copy(originalPtr, originalBytes, 0, originalBytes.Length);
+            System.Runtime.InteropServices.Marshal.Copy(backgroundPtr, backgroundBytes, 0, backgroundBytes.Length);
+
+            // Define the color to subtract (e.g., #1d1b1d)
+            int subtractGreyValue = (color.R + color.G + color.B) / 3;
             int threshold = 5;
-            for (int x = 0; x < original.Width; x++)
+
+            for (int y = 0; y < original.Height; y++)
             {
-                for (int y = 0; y < original.Height; y++)
+                for (int x = 0; x < original.Width; x++)
                 {
-                    Color originalPixel = original.GetPixel(x, y);
-                    Color backgroundPixel = background.GetPixel(x, y);
-                    int originalGreyValue = (originalPixel.R + originalPixel.G + originalPixel.B) / 3;
-                    if (Math.Abs(originalGreyValue - greenGreyValue) > threshold)
+                    int index = y * stride + x * 3;
+                    int originalGreyValue = (originalBytes[index + 2] + originalBytes[index + 1] + originalBytes[index]) / 3;
+
+                    if (Math.Abs(originalGreyValue - subtractGreyValue) > threshold)
                     {
-                        result.SetPixel(x, y, originalPixel);
+                        resultBytes[index] = originalBytes[index];
+                        resultBytes[index + 1] = originalBytes[index + 1];
+                        resultBytes[index + 2] = originalBytes[index + 2];
                     }
                     else
                     {
-                        result.SetPixel(x, y, backgroundPixel);
+                        resultBytes[index] = backgroundBytes[index];
+                        resultBytes[index + 1] = backgroundBytes[index + 1];
+                        resultBytes[index + 2] = backgroundBytes[index + 2];
                     }
                 }
             }
+
+            System.Runtime.InteropServices.Marshal.Copy(resultBytes, 0, resultPtr, resultBytes.Length);
+
+            original.UnlockBits(originalData);
+            background.UnlockBits(backgroundData);
+            result.UnlockBits(resultData);
 
             return result;
         }

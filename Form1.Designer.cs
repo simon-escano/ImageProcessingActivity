@@ -35,6 +35,7 @@
             go = new Button();
             export = new Button();
             imagePanel = new TableLayoutPanel();
+            chosenImageText = new Label();
             chosenImage = new PictureBox();
             chooseImage = new Button();
             tableLayoutPanel1 = new TableLayoutPanel();
@@ -43,6 +44,7 @@
             cameras = new ComboBox();
             toggleCamera = new Button();
             backgroundPanel = new TableLayoutPanel();
+            chosenBackgroundText = new Label();
             chosenBackground = new PictureBox();
             chooseBackground = new Button();
             processedPanel.SuspendLayout();
@@ -147,28 +149,39 @@
             // 
             imagePanel.ColumnCount = 1;
             imagePanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            imagePanel.Controls.Add(chosenImage, 0, 0);
-            imagePanel.Controls.Add(chooseImage, 1, 0);
+            imagePanel.Controls.Add(chosenImageText, 0, 0);
+            imagePanel.Controls.Add(chosenImage, 0, 1);
+            imagePanel.Controls.Add(chooseImage, 1, 2);
             imagePanel.Dock = DockStyle.Fill;
             imagePanel.Location = new Point(0, 29);
             imagePanel.Margin = new Padding(0);
             imagePanel.Name = "imagePanel";
             imagePanel.Padding = new Padding(8);
             imagePanel.RowCount = 2;
+            imagePanel.RowStyles.Add(new RowStyle());
             imagePanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             imagePanel.RowStyles.Add(new RowStyle());
-            imagePanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             imagePanel.Size = new Size(247, 237);
             imagePanel.TabIndex = 4;
+            // 
+            // chosenImageText
+            // 
+            chosenImageText.AutoSize = true;
+            chosenImageText.Location = new Point(8, 8);
+            chosenImageText.Margin = new Padding(0, 0, 0, 3);
+            chosenImageText.Name = "chosenImageText";
+            chosenImageText.Size = new Size(103, 15);
+            chosenImageText.TabIndex = 3;
+            chosenImageText.Text = "No chosen image.";
             // 
             // chosenImage
             // 
             chosenImage.BorderStyle = BorderStyle.FixedSingle;
             chosenImage.Dock = DockStyle.Fill;
-            chosenImage.Location = new Point(8, 8);
+            chosenImage.Location = new Point(8, 26);
             chosenImage.Margin = new Padding(0);
             chosenImage.Name = "chosenImage";
-            chosenImage.Size = new Size(231, 192);
+            chosenImage.Size = new Size(231, 174);
             chosenImage.SizeMode = PictureBoxSizeMode.Zoom;
             chosenImage.TabIndex = 1;
             chosenImage.TabStop = false;
@@ -202,7 +215,6 @@
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             tableLayoutPanel1.Size = new Size(789, 571);
             tableLayoutPanel1.TabIndex = 0;
-            tableLayoutPanel1.Paint += tableLayoutPanel1_Paint;
             // 
             // chosenPanel
             // 
@@ -268,8 +280,9 @@
             // 
             backgroundPanel.ColumnCount = 1;
             backgroundPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            backgroundPanel.Controls.Add(chosenBackground, 0, 0);
-            backgroundPanel.Controls.Add(chooseBackground, 1, 0);
+            backgroundPanel.Controls.Add(chosenBackgroundText, 0, 0);
+            backgroundPanel.Controls.Add(chosenBackground, 0, 1);
+            backgroundPanel.Controls.Add(chooseBackground, 1, 2);
             backgroundPanel.Dock = DockStyle.Fill;
             backgroundPanel.Enabled = false;
             backgroundPanel.Location = new Point(0, 266);
@@ -277,20 +290,30 @@
             backgroundPanel.Name = "backgroundPanel";
             backgroundPanel.Padding = new Padding(8);
             backgroundPanel.RowCount = 2;
+            backgroundPanel.RowStyles.Add(new RowStyle());
             backgroundPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             backgroundPanel.RowStyles.Add(new RowStyle());
-            backgroundPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             backgroundPanel.Size = new Size(247, 237);
             backgroundPanel.TabIndex = 6;
+            // 
+            // chosenBackgroundText
+            // 
+            chosenBackgroundText.AutoSize = true;
+            chosenBackgroundText.Location = new Point(8, 8);
+            chosenBackgroundText.Margin = new Padding(0, 0, 0, 3);
+            chosenBackgroundText.Name = "chosenBackgroundText";
+            chosenBackgroundText.Size = new Size(134, 15);
+            chosenBackgroundText.TabIndex = 4;
+            chosenBackgroundText.Text = "No chosen background.";
             // 
             // chosenBackground
             // 
             chosenBackground.BorderStyle = BorderStyle.FixedSingle;
             chosenBackground.Dock = DockStyle.Fill;
-            chosenBackground.Location = new Point(8, 8);
+            chosenBackground.Location = new Point(8, 26);
             chosenBackground.Margin = new Padding(0);
             chosenBackground.Name = "chosenBackground";
-            chosenBackground.Size = new Size(231, 192);
+            chosenBackground.Size = new Size(231, 174);
             chosenBackground.SizeMode = PictureBoxSizeMode.Zoom;
             chosenBackground.TabIndex = 1;
             chosenBackground.TabStop = false;
@@ -323,12 +346,14 @@
             ((System.ComponentModel.ISupportInitialize)processed).EndInit();
             tableLayoutPanel2.ResumeLayout(false);
             imagePanel.ResumeLayout(false);
+            imagePanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)chosenImage).EndInit();
             tableLayoutPanel1.ResumeLayout(false);
             chosenPanel.ResumeLayout(false);
             chosenPanel.PerformLayout();
             cameraPanel.ResumeLayout(false);
             backgroundPanel.ResumeLayout(false);
+            backgroundPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)chosenBackground).EndInit();
             ResumeLayout(false);
         }
@@ -352,5 +377,7 @@
         private TableLayoutPanel cameraPanel;
         private ComboBox cameras;
         private Button toggleCamera;
+        private Label chosenImageText;
+        private Label chosenBackgroundText;
     }
 }
